@@ -5,7 +5,7 @@ function getCatParam() {
 }
 // Auto-load output_with_urls.xlsx if available
 window.addEventListener('DOMContentLoaded', function () {
-    fetch('output_with_urls.xlsx')
+    fetch('https://arunkumarsconverse.github.io/minisite-indian-employees/output_with_urls.xlsx')
         .then(resp => {
             if (!resp.ok) throw new Error('No output_with_urls.xlsx found');
             return resp.arrayBuffer();

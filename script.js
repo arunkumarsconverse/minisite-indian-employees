@@ -1,3 +1,8 @@
+// Helper to get ?cat= param
+function getCatParam() {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('cat');
+}
 // Auto-load output_with_urls.xlsx if available
 window.addEventListener('DOMContentLoaded', function () {
     fetch('output_with_urls.xlsx')
@@ -69,9 +74,6 @@ function processExcelData(data) {
     // Controls
     const controls = document.getElementById('controls');
     controls.style.display = '';
-    // Populate category filter
-    const catFilter = document.getElementById('categoryFilter');
-    catFilter.innerHTML = '<option value="">All Categories</option>' + categories.map(cat => `<option value="${cat}">${cat}</option>`).join('');
     // Render function
     function render(products) {
         let resultsDiv = document.getElementById('results');
@@ -167,9 +169,12 @@ function processExcelData(data) {
     }
     // Filtering and sorting
     function applyFilters() {
-        let filtered = allProducts;
-        const cat = document.getElementById('categoryFilter').value;
-        if (cat) filtered = filtered.filter(p => p.__category === cat);
+        // Determine which sheet to show
+        let cat = getCatParam();
+        let sheet = 'Footwear', menu = 'menu-shoes';
+        if (cat === 'App') { sheet = 'App'; menu = 'menu-clothings'; }
+        else if (cat === 'Acc') { sheet = 'Acc'; menu = 'menu-accessories'; }
+        let filtered = allProducts.filter(p => p.__category === sheet);
         const sortBy = document.getElementById('sortBy').value;
         if (sortBy === 'name') {
             filtered = filtered.slice().sort((a, b) => (a['Product Name'] || '').localeCompare(b['Product Name'] || ''));
@@ -183,28 +188,23 @@ function processExcelData(data) {
         if (searchVal) {
             filtered = filtered.filter(p => (p['Product Name'] || '').toLowerCase().includes(searchVal) || (p['Article No'] || '').toLowerCase().includes(searchVal));
         }
+        setActiveMenu(menu);
         render(filtered);
+        messageDiv.textContent = 'Loaded ' + filtered.length + ' products.';
     }
-    document.getElementById('categoryFilter').onchange = applyFilters;
     document.getElementById('sortBy').onchange = applyFilters;
     // Menu click handlers
     document.getElementById('menu-shoes').onclick = function (e) {
         e.preventDefault();
-        document.getElementById('categoryFilter').value = 'Shoes';
-        applyFilters();
-        setActiveMenu('menu-shoes');
+        window.location.search = '';
     };
     document.getElementById('menu-clothings').onclick = function (e) {
         e.preventDefault();
-        document.getElementById('categoryFilter').value = 'Clothings';
-        applyFilters();
-        setActiveMenu('menu-clothings');
+        window.location.search = '?cat=App';
     };
     document.getElementById('menu-accessories').onclick = function (e) {
         e.preventDefault();
-        document.getElementById('categoryFilter').value = 'Accessories';
-        applyFilters();
-        setActiveMenu('menu-accessories');
+        window.location.search = '?cat=Acc';
     };
     function setActiveMenu(id) {
         document.querySelectorAll('.header-menu a').forEach(a => a.classList.remove('active'));
@@ -214,5 +214,4 @@ function processExcelData(data) {
     document.getElementById('searchBox').addEventListener('input', applyFilters);
     // Initial render
     applyFilters();
-    messageDiv.textContent = 'Loaded ' + allProducts.length + ' products.';
 }
